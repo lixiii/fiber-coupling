@@ -2,6 +2,7 @@ import bpc203 as bpc
 import camera as cam
 import time
 import numpy as np
+import cv2
 
 __DEBUG__ = True
 
@@ -11,7 +12,7 @@ def main():
     # initCam()
 
     # To save time, you can also set the gain and shutter directly
-    initCam(False, False, 3, 0.5)
+    initCam(False, False, -5, 0.05)
     print("Starting optimisation")
     X,Y = optimise()
     input("Optimisation complete. Press enter to close the camera connection and BPC203 connection. This will not reset the positions")
@@ -82,7 +83,7 @@ def optimise(stepCount = 5, waveguideSizeX = 5000, waveguideSizeZ = 2000, fineSt
         bpc.position(2, pos)
         img = cam.capture(False, True)
         val = np.max(img)
-        _printDebugInfo(val, pos, Z, maxVal, maxX, maxZ)
+        _printDebugInfo(val, pos, Z, maxVal, maxX, maxZ, img)
         if val > maxVal:
             maxVal = val
             maxX = pos
@@ -95,7 +96,7 @@ def optimise(stepCount = 5, waveguideSizeX = 5000, waveguideSizeZ = 2000, fineSt
         bpc.position(1, pos)
         img = cam.capture(False, True)
         val = np.max(img)
-        _printDebugInfo(val, maxX, pos, maxVal, maxX, maxZ)
+        _printDebugInfo(val, maxX, pos, maxVal, maxX, maxZ, img)
         if val > maxVal:
             maxVal = val
             maxZ = pos
@@ -128,7 +129,7 @@ def optimise(stepCount = 5, waveguideSizeX = 5000, waveguideSizeZ = 2000, fineSt
             bpc.position(2, XX)
             img = cam.capture(False, True)
             val = np.max(img)
-            _printDebugInfo(val, XX, maxZ, maxVal, maxX, maxZ)
+            _printDebugInfo(val, XX, maxZ, maxVal, maxX, maxZ, img)
             if val > maxVal:
                 maxVal = val
                 maxX = XX
@@ -138,7 +139,7 @@ def optimise(stepCount = 5, waveguideSizeX = 5000, waveguideSizeZ = 2000, fineSt
             bpc.position(1, ZZ)
             img = cam.capture(False, True)
             val = np.max(img)
-            _printDebugInfo(val, maxX, ZZ, maxVal, maxX, maxZ)
+            _printDebugInfo(val, maxX, ZZ, maxVal, maxX, maxZ, img)
             if val > maxVal:
                 maxVal = val
                 maxZ = ZZ
@@ -154,11 +155,13 @@ def close():
 
 
 # Helper function
-def _printDebugInfo(currentVal, X, Z, maxVal, maxX, maxZ):
+def _printDebugInfo(currentVal, X, Z, maxVal, maxX, maxZ, img):
     global __DEBUG__
     if __DEBUG__:
         print("Current position ({}, {}) and CCD max value: {}".format(X,Z, currentVal) )
         print("Maximum value of {} occurs at ({}, {}) ".format(maxVal, maxX, maxZ))
+        cv2.imshow("Current image", img)
+        cv2.waitKey(50)
 
 if __name__=="__main__":
     main()
