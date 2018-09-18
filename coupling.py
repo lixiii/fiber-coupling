@@ -10,7 +10,10 @@ def main():
     initBPC()
     initCam( False )
     print("Starting optimisation")
-    optimise()
+    X,Y = optimise()
+    input("Optimisation complete. Press enter to close the camera connection.")
+    cam.close()
+    input("Press enter to reset the system.")
     close()
 
 
@@ -137,6 +140,7 @@ def optimise(stepCount = 5, waveguideSizeX = 5000, waveguideSizeZ = 2000, fineSt
 
 
 def close():
+    """ This function terminates all connections and resets the system"""
     bpc.close()
     cam.close()
 
