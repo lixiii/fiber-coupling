@@ -3,35 +3,41 @@ import camera as cam
 import time
 import numpy as np
 
-__DEBUG__ = False
+__DEBUG__ = True
 
 def main():
     ''' Example usage'''
     initBPC()
-    initCam( False )
+    # initCam()
+
+    # To save time, you can also set the gain and shutter directly
+    initCam(False, False, 3, 0.5)
     print("Starting optimisation")
     X,Y = optimise()
-    input("Optimisation complete. Press enter to close the camera connection.")
+    input("Optimisation complete. Press enter to close the camera connection and BPC203 connection. This will not reset the positions")
     cam.close()
-    input("Press enter to reset the system.")
+    bpc.closePort()
+    input("Press enter to reset the system or terminate the programme now.")
     close()
 
 
-def initCam(adjustCamera = True, gain = -5, shutter = 0.005):
+def initCam(autoAdjust = True, retainCameraSettings = False, gain = -5, shutter = 0.005):
     """
-        adjustCamera: If True, the function will attempt to set the shutter and gain values
+        autoAdjust: If True, the function will attempt to automatically set the shutter and gain values by iteration. This will take a while
+        retainCameraSettings: If True, no camera settings will be changed. The Gain and Shutter values will be left as they are, but this function checks if the camera is saturated. 
     """
     cam.printNumOfCam()
     cam.init()
-    if adjustCamera:
+    if autoAdjust:
         cam.autoAdjustShutter()
-    else:
+    elif retainCameraSettings == False:
         cam.setGain(gain)
         cam.setShutter(shutter)
-        sat = cam.isSaturated()
-        print( "Camera saturation: ",  sat)
-        if sat:
-            raise RuntimeWarning("WARNING: Camera is saturated. Optimisation will not work properly.")
+        
+    sat = cam.isSaturated()
+    print( "Camera saturation: ",  sat)
+    if sat:
+        raise RuntimeWarning("WARNING: Camera is saturated. Optimisation will not work properly.")
     cam.capture()
 
 def initBPC():
@@ -67,6 +73,8 @@ def optimise(stepCount = 5, waveguideSizeX = 5000, waveguideSizeZ = 2000, fineSt
     maxVal = 0
     maxX = X
     maxZ = Z
+    print("------------------------")
+    print("Starting coarse optimisation. This should take only a short while. ")
 
     for i in range(-stepCount, stepCount + 1, 1):
         # Scan in the X direction first
@@ -140,7 +148,7 @@ def optimise(stepCount = 5, waveguideSizeX = 5000, waveguideSizeZ = 2000, fineSt
 
 
 def close():
-    """ This function terminates all connections and resets the system"""
+    """ This function terminates all connections and resets the system. To preserve the position of the controller, use bpc.closePort()"""
     bpc.close()
     cam.close()
 
